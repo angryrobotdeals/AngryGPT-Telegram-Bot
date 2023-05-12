@@ -1,6 +1,8 @@
 # AngryGPT-Telegram-Bot
 ### Telegram bot for ChatGPT API by Angry Robot Deals
 
+
+## Start bot
 Run into development mode:
 ```bash
 npm run start:dev
@@ -23,3 +25,19 @@ Remove Docker container:
 docker stop telegram-gpt-bot &&
 docker rm telegram-gpt-bot
 ```
+
+## Bot commands
+- /start - start bot
+- /help - help message
+- /setmodel - Set the AI model (either gpt-3.5-turbo or GPT-4)
+- /newchat - Start a new chat session
+
+
+## Deploy server
+- clone repo
+- rename .env.example to .env
+- set your Telegram bot token in .env file
+- set your ChatGPT API key in .env file
+- set your MongoDB connection string in .env file
+- run `npm install`
+- run bot
