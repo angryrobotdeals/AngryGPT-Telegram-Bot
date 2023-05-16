@@ -41,7 +41,11 @@ export class BotService implements OnModuleInit {
       const chatId = msg.chat.id;
 
       const message = `
-      Hello! Here are the commands you can use:
+      Hello!
+      This is the free ChatGPT bot by Pavel Valentov from Angry Robot Deals.
+      For using AI you need to set the model first and subscribe to my @angryrobotdeals channel.
+      Model GPT-3.5 is fast, but GPT-4 is slow and more powerful.
+      Here are the commands you can use:
       /setmodel - Set the AI model (either gpt-3.5-turbo or GPT-4)
       /newchat - Start a new chat session
       /help - Show this help message
