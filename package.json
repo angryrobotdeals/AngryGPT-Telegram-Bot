@@ -9,6 +9,8 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "build": "nest build",
+    "start:docker": "docker build -t telegram-gpt-bot . && docker run -d --name telegram-gpt-bot telegram-gpt-bot",
+    "restart:docker": "docker stop telegram-gpt-bot && docker rm telegram-gpt-bot && npm run start:docker",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
