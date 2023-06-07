@@ -12,6 +12,11 @@ export class BotService implements OnModuleInit {
   private log: Collection;
   private images: Collection;
 
+  private mainKeyboard = {
+    reply_markup: {
+      remove_keyboard: true,
+    },
+  };
   // private mainKeyboard = {
   //   reply_markup: {
   //     keyboard: [[{ text: 'Menu' }, { text: 'Image generation' }]],
@@ -97,8 +102,8 @@ export class BotService implements OnModuleInit {
       await this.session.updateOne({ _id: chatId }, { $set: { chatHistory: '', mode: 'image' } }, { upsert: true });
       await this.bot.sendMessage(
         chatId,
-        'Switched to image generation mode. Please, provide a prompt for image generation.'
-        // this.mainKeyboard
+        'Switched to image generation mode. Please, provide a prompt for image generation.',
+        this.mainKeyboard
       );
     });
 
@@ -147,7 +152,8 @@ export class BotService implements OnModuleInit {
                     `<a href="${imageUrl}">You can view the full-sized image #${i} here</a>`,
                     {
                       parse_mode: 'HTML',
-                    }
+                    },
+                    this.mainKeyboard
                   ),
                 ]);
               }
