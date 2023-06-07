@@ -57,20 +57,19 @@ export class BotService implements OnModuleInit {
     this.bot.onText(/\/start|\/help/, (msg) => {
       const chatId = msg.chat.id;
 
-      const message = `
-      Hello!
-      This is the free ChatGPT bot by Pavel Valentov from Angry Robot Deals.
+      const message = `Hello!
+This is the free ChatGPT bot by Pavel Valentov from Angry Robot Deals.
 
-      For using AI you need to set the model first
-      Model GPT-3.5 is fast, but GPT-4 is slow and more powerful.
-      And you may subscribe to my @angryrobotdeals news channel.
+For using AI you need to set the model first
+Model GPT-3.5 is fast, but GPT-4 is slow and more powerful.
+And you may subscribe to my @angryrobotdeals news channel.
 
-      Here are the commands you can use:
-      /setmodel - Set the AI model (either gpt-3.5-turbo or GPT-4)
-      /newchat - Start a new chat session
-      /images - Start image generation mode
-      /help - Show this help message
-      `;
+Here are the commands you can use:
+/setmodel - Set the AI model (either gpt-3.5-turbo or GPT-4)
+/newchat - Start a new chat session
+/images - Start image generation mode
+/help - Show this help message`;
+
       this.bot.sendMessage(chatId, message);
     });
 
