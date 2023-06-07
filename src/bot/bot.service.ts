@@ -126,7 +126,7 @@ export class BotService implements OnModuleInit {
         if (mode === 'image') {
           const response = await this.openai.createImage({
             prompt: msg.text,
-            n: 4,
+            n: 2,
             size: '1024x1024',
           });
 
