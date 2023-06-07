@@ -31,6 +31,7 @@ docker rm telegram-gpt-bot
 - /help - help message
 - /setmodel - Set the AI model (either gpt-3.5-turbo or GPT-4)
 - /newchat - Start a new chat session
+- /images - Start image generation mode
 
 
 ## Deploy server
