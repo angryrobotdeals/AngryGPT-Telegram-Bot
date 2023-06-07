@@ -16,13 +16,13 @@ npm run build && npm run start:prod
 
 Run into Docker:
 ```bash
-docker build -t telegram-gpt-bot . &&
+docker build -t telegram-gpt-bot . && \
 docker run -d --name telegram-gpt-bot telegram-gpt-bot
 ```
 
 Remove Docker container:
 ```bash
-docker stop telegram-gpt-bot &&
+docker stop telegram-gpt-bot && \
 docker rm telegram-gpt-bot
 ```
 

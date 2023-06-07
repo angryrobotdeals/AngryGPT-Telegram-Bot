@@ -9,6 +9,16 @@ export class BotService implements OnModuleInit {
   private openai: OpenAIApi;
   private session: Collection;
   private messages: Collection;
+  private log: Collection;
+  private images: Collection;
+
+  // private mainKeyboard = {
+  //   reply_markup: {
+  //     keyboard: [[{ text: 'Menu' }, { text: 'Image generation' }]],
+  //     resize_keyboard: true,
+  //     one_time_keyboard: false,
+  //   },
+  // };
 
   constructor() {
     this.bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: true });
@@ -17,6 +27,8 @@ export class BotService implements OnModuleInit {
       .then((client) => {
         this.session = client.db().collection('telegramSession');
         this.messages = client.db().collection('telegramChat');
+        this.log = client.db().collection('telegramLog');
+        this.images = client.db().collection('telegramImages');
 
         this.initializeBot().then();
       })
@@ -48,6 +60,7 @@ export class BotService implements OnModuleInit {
       Here are the commands you can use:
       /setmodel - Set the AI model (either gpt-3.5-turbo or GPT-4)
       /newchat - Start a new chat session
+      /images - Start image generation mode
       /help - Show this help message
       `;
       this.bot.sendMessage(chatId, message);
@@ -73,9 +86,20 @@ export class BotService implements OnModuleInit {
     this.bot.onText(/\/newchat/, async (msg) => {
       const chatId = msg.chat.id;
 
-      await this.session.updateOne({ _id: chatId }, { $set: { chatHistory: '' } }, { upsert: true });
+      await this.session.updateOne({ _id: chatId }, { $set: { chatHistory: '', mode: 'text' } }, { upsert: true });
 
       this.bot.sendMessage(chatId, 'Started a new chat session.');
+    });
+
+    this.bot.onText(/\/images/, async (msg) => {
+      const chatId = msg.chat.id;
+
+      await this.session.updateOne({ _id: chatId }, { $set: { chatHistory: '', mode: 'image' } }, { upsert: true });
+      await this.bot.sendMessage(
+        chatId,
+        'Switched to image generation mode. Please, provide a prompt for image generation.'
+        // this.mainKeyboard
+      );
     });
 
     this.bot.on('callback_query', async (query) => {
@@ -93,11 +117,53 @@ export class BotService implements OnModuleInit {
 
       const chatId = msg.chat.id;
       const session = await this.session.findOne({ _id: chatId });
+      const mode = session?.mode || 'text'; // default to 'text'
       const model = session?.model || 'gpt-3.5-turbo'; // default to gpt-3.5-turbo
       const chatHistory = session?.chatHistory || '';
 
       try {
         // console.log(msg);
+        if (mode === 'image') {
+          const response = await this.openai.createImage({
+            prompt: msg.text,
+            n: 4,
+            size: '1024x1024',
+          });
+
+          // console.log('image response: ', response.data);
+
+          if (response.data.data?.length) {
+            let i = 0;
+            for (const image of response.data.data) {
+              i++;
+
+              const imageUrl = image?.url;
+              if (imageUrl) {
+                await Promise.all([
+                  this.images.insertOne({ ...msg, url: imageUrl }),
+                  this.bot.sendPhoto(chatId, imageUrl, { caption: `Here is your generated image #${i}` }),
+                  this.bot.sendMessage(
+                    chatId,
+                    `<a href="${imageUrl}">You can view the full-sized image #${i} here</a>`,
+                    {
+                      parse_mode: 'HTML',
+                    }
+                  ),
+                ]);
+              }
+            }
+
+            // await this.bot.sendPhoto(chatId, imageUrl, { caption: 'Here is your generated image' });
+            // // await this.bot.sendMessage(chatId, `You can view the full-sized image here: ${imageUrl}`, this.mainKeyboard);
+            // await this.bot.sendMessage(chatId, `<a href="${imageUrl}">You can view the full-sized image here</a>`, {
+            //   parse_mode: 'HTML',
+            // });
+          } else {
+            this.bot.sendMessage(chatId, `Empty response received.`);
+          }
+
+          return;
+        }
 
         const response = await this.openai.createChatCompletion({
           model,
@@ -115,13 +181,18 @@ export class BotService implements OnModuleInit {
 
         this.bot.sendMessage(chatId, aiReply);
       } catch (error) {
+        console.log('error: ', error);
+
+        await this.log.insertOne({ ...msg, error: error.message });
+
         if (error.response) {
           console.log(error.response.status);
           console.log(error.response.data);
         } else {
           console.log(error.message);
         }
-        this.bot.sendMessage(chatId, `Sorry, something went wrong: ${error.message}`);
+
+        this.bot.sendMessage(chatId, `Sorry, something went wrong: ${error.message}. Try again later.`);
       }
     });
   }
