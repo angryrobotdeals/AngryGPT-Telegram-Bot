@@ -81,7 +81,8 @@ Here are the commands you can use:
           inline_keyboard: [
             [
               { text: 'GPT-3.5', callback_data: 'gpt-3.5-turbo' },
-              { text: 'GPT-4', callback_data: 'gpt-4-0314' },
+              { text: 'GPT-4-32k', callback_data: 'gpt-4-32k' },
+              { text: 'GPT-4', callback_data: 'gpt-4' },
             ],
           ],
         },
@@ -126,7 +127,7 @@ Here are the commands you can use:
       const session = await this.session.findOne({ _id: chatId });
       const mode = session?.mode || 'text'; // default to 'text'
       const model = session?.model || 'gpt-3.5-turbo'; // default to gpt-3.5-turbo
-      const chatHistory = session?.chatHistory || '';
+      const chatHistory = (session?.chatHistory || '').slice(-1024);
 
       try {
         // console.log(msg);
@@ -173,6 +174,7 @@ Here are the commands you can use:
           return;
         }
 
+        console.log('Answer: ', model, chatHistory + '\n' + msg.text);
         const response = await this.openai.createChatCompletion({
           model,
           messages: [{ role: 'user', content: chatHistory + '\n' + msg.text }],
@@ -188,19 +190,14 @@ Here are the commands you can use:
         await this.session.updateOne({ _id: chatId }, { $set: { chatHistory: updatedChatHistory } }, { upsert: true });
 
         this.bot.sendMessage(chatId, aiReply);
-      } catch (error) {
-        console.log('error: ', error);
+      } catch (err) {
+        const error = err.response?.data?.error?.message || err.response?.data?.error?.code || err.message;
 
-        await this.log.insertOne({ ...msg, error: error.message });
+        await this.log.insertOne({ ...msg, error });
 
-        if (error.response) {
-          console.log(error.response.status);
-          console.log(error.response.data);
-        } else {
-          console.log(error.message);
-        }
+        console.error('ERROR:', error);
 
-        this.bot.sendMessage(chatId, `Sorry, something went wrong: ${error.message}. Try again later.`);
+        this.bot.sendMessage(chatId, `Sorry, something went wrong: ${error}. Try again later.`);
       }
     });
   }
