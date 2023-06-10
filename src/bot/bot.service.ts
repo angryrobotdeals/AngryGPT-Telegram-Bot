@@ -65,7 +65,7 @@ Model GPT-3.5 is fast, but GPT-4 is slow and more powerful.
 And you may subscribe to my @angryrobotdeals news channel.
 
 Here are the commands you can use:
-/setmodel - Set the AI model (either gpt-3.5-turbo or GPT-4)
+/setmodel - Set the AI chat model (either gpt-3.5-turbo or GPT-4)
 /newchat - Start a new chat session
 /images - Start image generation mode
 /help - Show this help message`;
@@ -113,7 +113,11 @@ Here are the commands you can use:
     this.bot.on('callback_query', async (query) => {
       const chatId = query.message.chat.id;
 
-      await this.session.updateOne({ _id: chatId }, { $set: { model: query.data } }, { upsert: true });
+      await this.session.updateOne(
+        { _id: chatId },
+        { $set: { model: query.data, chatHistory: '', mode: 'text' } },
+        { upsert: true }
+      );
 
       this.bot.answerCallbackQuery(query.id, { text: `Model set to ${query.data}` });
     });
@@ -174,10 +178,10 @@ Here are the commands you can use:
           return;
         }
 
-        console.log('Answer: ', model, chatHistory + '\n' + msg.text);
+        console.log('Answer: ', msg.text);
         const response = await this.openai.createChatCompletion({
           model,
-          messages: [{ role: 'user', content: chatHistory + '\n' + msg.text }],
+          messages: [{ role: 'user', content: msg.text + '\n Context:' + chatHistory }],
           max_tokens: 2048,
         });
 
