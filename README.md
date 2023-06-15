@@ -16,6 +16,12 @@ npm run build && npm run start:prod
 
 Run into Docker:
 ```bash
+docker compose up -d
+```
+
+or
+
+```bash
 docker build -t telegram-gpt-bot . && \
 docker run -d --name telegram-gpt-bot telegram-gpt-bot
 ```

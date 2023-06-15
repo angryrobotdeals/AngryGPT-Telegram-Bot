@@ -1,0 +1,7 @@
+version: '3'
+services:
+  telegram-gpt-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
