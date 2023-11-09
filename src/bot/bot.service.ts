@@ -1,12 +1,12 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import * as TelegramBot from 'node-telegram-bot-api';
-import { Configuration, OpenAIApi } from 'openai';
+import OpenAI, { ClientOptions } from 'openai';
 import { MongoClient, Collection } from 'mongodb';
 
 @Injectable()
 export class BotService implements OnModuleInit {
   private bot: TelegramBot;
-  private openai: OpenAIApi;
+  private openai: OpenAI;
   private session: Collection;
   private messages: Collection;
   private log: Collection;
@@ -41,12 +41,11 @@ export class BotService implements OnModuleInit {
   }
 
   async onModuleInit() {
-    const configuration = new Configuration({
+    const configuration: ClientOptions = {
       organization: process.env.OPENAI_API_ORGANIZATION,
       apiKey: process.env.OPENAI_API_KEY,
-    });
-    this.openai = new OpenAIApi(configuration);
-
+    };
+    this.openai = new OpenAI(configuration);
     // const response = await openai.listEngines();
     // console.log('listEngines: ', response.data);
 
@@ -106,7 +105,7 @@ Here are the commands you can use:
       await this.bot.sendMessage(
         chatId,
         'Switched to image generation mode. Please, provide a prompt for image generation.',
-        this.mainKeyboard
+        this.mainKeyboard,
       );
     });
 
@@ -116,7 +115,7 @@ Here are the commands you can use:
       await this.session.updateOne(
         { _id: chatId },
         { $set: { model: query.data, chatHistory: '', mode: 'text' } },
-        { upsert: true }
+        { upsert: true },
       );
 
       this.bot.answerCallbackQuery(query.id, { text: `Model set to ${query.data}` });
@@ -136,17 +135,13 @@ Here are the commands you can use:
       try {
         // console.log(msg);
         if (mode === 'image') {
-          const response = await this.openai.createImage({
-            prompt: msg.text,
-            n: 2,
-            size: '1024x1024',
-          });
+          const response = await this.openai.images.generate({ model: 'dall-e-3', prompt: msg.text, n: 2 });
 
           // console.log('image response: ', response.data);
 
-          if (response.data.data?.length) {
+          if (response.data?.length) {
             let i = 0;
-            for (const image of response.data.data) {
+            for (const image of response.data) {
               i++;
 
               const imageUrl = image?.url;
@@ -160,7 +155,7 @@ Here are the commands you can use:
                     {
                       parse_mode: 'HTML',
                     },
-                    this.mainKeyboard
+                    this.mainKeyboard,
                   ),
                 ]);
               }
@@ -178,17 +173,18 @@ Here are the commands you can use:
           return;
         }
 
-        console.log('Answer: ', msg.text);
-        const response = await this.openai.createChatCompletion({
+        Logger.log(`Request: ${msg?.text}`);
+
+        const response = await this.openai.completions.create({
           model,
-          messages: [{ role: 'user', content: msg.text + '\n Context:' + chatHistory }],
-          max_tokens: 2048,
+          prompt: msg.text,
+          max_tokens: 1024,
         });
 
-        await this.messages.insertOne({ ...msg, answer: response.data });
+        await this.messages.insertOne({ ...msg, answer: response });
         // console.log(response.data);
 
-        const aiReply = response.data?.choices?.[0]?.message?.content?.trim() || 'Empty answer';
+        const aiReply = response?.choices?.[0]?.text?.trim() || 'No answer';
         const updatedChatHistory = chatHistory + '\nUser: ' + msg.text + '\nAI: ' + aiReply;
 
         await this.session.updateOne({ _id: chatId }, { $set: { chatHistory: updatedChatHistory } }, { upsert: true });
