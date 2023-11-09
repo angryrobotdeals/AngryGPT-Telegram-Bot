@@ -64,7 +64,7 @@ Model GPT-3.5 is fast, but GPT-4 is slow and more powerful.
 And you may subscribe to my @angryrobotdeals news channel.
 
 Here are the commands you can use:
-/setmodel - Set the AI chat model (either gpt-3.5-turbo or GPT-4)
+/setmodel - Set the AI chat model (either gpt-3.5-turbo or GPT-4 Turbo)
 /newchat - Start a new chat session
 /images - Start image generation mode
 /help - Show this help message`;
@@ -79,9 +79,9 @@ Here are the commands you can use:
         reply_markup: {
           inline_keyboard: [
             [
-              { text: 'GPT-3.5', callback_data: 'gpt-3.5-turbo' },
-              { text: 'GPT-4-32k', callback_data: 'gpt-4-32k' },
+              { text: 'GPT-3.5-turbo', callback_data: 'gpt-3.5-turbo' },
               { text: 'GPT-4', callback_data: 'gpt-4' },
+              { text: 'GPT-4-turbo', callback_data: 'gpt-4-1106-preview' },
             ],
           ],
         },
@@ -173,18 +173,28 @@ Here are the commands you can use:
           return;
         }
 
-        Logger.log(`Request: ${msg?.text}`);
+        Logger.log(`Request: ${msg?.text}, model: ${model}`, 'BotService');
 
-        const response = await this.openai.completions.create({
+        // const response = await this.openai.completions.create({
+        //   model,
+        //   prompt: msg.text,
+        //   max_tokens: 1024,
+        //   temperature: 0,
+        // });
+        const response = await this.openai.chat.completions.create({
           model,
-          prompt: msg.text,
+          messages: [
+            { role: 'system', content: 'You are a helpful assistant' },
+            { role: 'user', content: msg.text },
+          ],
+          // prompt: msg.text,
           max_tokens: 1024,
         });
 
         await this.messages.insertOne({ ...msg, answer: response });
-        // console.log(response.data);
+        console.log(response);
 
-        const aiReply = response?.choices?.[0]?.text?.trim() || 'No answer';
+        const aiReply = response?.choices?.[0]?.message?.content?.trim() || 'No answer';
         const updatedChatHistory = chatHistory + '\nUser: ' + msg.text + '\nAI: ' + aiReply;
 
         await this.session.updateOne({ _id: chatId }, { $set: { chatHistory: updatedChatHistory } }, { upsert: true });
