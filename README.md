@@ -35,7 +35,7 @@ docker rm telegram-gpt-bot
 ## Bot commands
 - /start - start bot
 - /help - help message
-- /setmodel - Set the AI model (either gpt-3.5-turbo or GPT-4)
+- /setmodel - Set the AI model (either GPT-4o-mini or GPT-4o)
 - /newchat - Start a new chat session
 - /images - Start image generation mode
 

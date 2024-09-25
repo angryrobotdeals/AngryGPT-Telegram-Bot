@@ -60,11 +60,11 @@ export class BotService implements OnModuleInit {
 This is the free ChatGPT bot by Pavel Valentov from Angry Robot Deals.
 
 For using AI you need to set the model first
-Model GPT-3.5 is fast, but GPT-4 is slow and more powerful.
+Model GPT-4o-mini is fast, but GPT-4o is slow and more powerful.
 And you may subscribe to my @angryrobotdeals news channel.
 
 Here are the commands you can use:
-/setmodel - Set the AI chat model (either gpt-3.5-turbo or GPT-4 Turbo)
+/setmodel - Set the AI chat model (either GPT-4o-mini or GPT-4o)
 /newchat - Start a new chat session
 /images - Start image generation mode
 /help - Show this help message`;
@@ -79,9 +79,8 @@ Here are the commands you can use:
         reply_markup: {
           inline_keyboard: [
             [
-              { text: 'GPT-3.5-turbo', callback_data: 'gpt-3.5-turbo' },
-              { text: 'GPT-4', callback_data: 'gpt-4' },
-              { text: 'GPT-4-turbo', callback_data: 'gpt-4-1106-preview' },
+              { text: 'GPT-4o-mini', callback_data: 'gpt-4o-mini' },
+              { text: 'GPT-4o', callback_data: 'gpt-4o' },
             ],
           ],
         },
@@ -129,7 +128,7 @@ Here are the commands you can use:
       const chatId = msg.chat.id;
       const session = await this.session.findOne({ _id: chatId });
       const mode = session?.mode || 'text'; // default to 'text'
-      const model = session?.model || 'gpt-3.5-turbo'; // default to gpt-3.5-turbo
+      const model = session?.model || 'gpt-4o-mini'; // default to gpt-4o-mini
       const chatHistory = (session?.chatHistory || '').slice(-1024);
 
       try {
