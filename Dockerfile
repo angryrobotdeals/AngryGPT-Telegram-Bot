@@ -1,6 +1,6 @@
-FROM node:20-alpine
+FROM node:21-alpine
 
-RUN apt update; npm i -g npm@latest @nestjs/cli
+RUN apk update && apk add --no-cache git; npm i -g npm@latest @nestjs/cli
 
 # Create and set the working directory
 RUN mkdir -p /src/app
