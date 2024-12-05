@@ -26,6 +26,11 @@ docker build -t telegram-gpt-bot . && \
 docker run -d --name telegram-gpt-bot telegram-gpt-bot
 ```
 
+```bash
+docker stop telegram-gpt-bot && docker rm telegram-gpt-bot
+docker build -t telegram-gpt-bot . && docker run -d --name telegram-gpt-bot telegram-gpt-bot
+```
+
 Remove Docker container:
 ```bash
 docker stop telegram-gpt-bot && \
